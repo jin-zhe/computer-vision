@@ -89,8 +89,27 @@ def preprocess(target_corr = 4):
   pickle_dump(mr_fc_m, OUTPUT_DIR + "mr_fc_m.pkl")
   pickle_dump(mr_fc_r, OUTPUT_DIR + "mr_fc_r.pkl")
 
+def manual_correspondence():
+  lm_fc_l = [(1621.0,350.0),  (1530.0,698.0), (1709.0,499.0), (1525.0,660.0), (1676.0,245.0), (1889.0, 786.0),  (1755.0,1038.0),  (1625.0,480.0), (1793.0,560.0), (1827.0,438.0), (1826.0,785.0), (1752.0,573.0), (1648.0,546.0), (1688.0,273.0)]
+  lm_fc_m = [(110.0,296.0),   (96.0, 653.0),  (227.0,425.0),  (80.0,618.0),   (139.0,186.0),  (448.0, 647.0),   (386.0,903.0),    (143.0,422.0),  (323.0,462.0),  (324.0,348.0),  (396.0,661.0),  (283.0,486.0),  (177.0,478.0),  (158.0,213.0)]
+  mr_fc_m = [(1485.0,989.0), (1613.0,991.0), (1613.0,880.0),  (1911.0,667.0), (1676.0,409.0), (1587.0,146.0), (1601.0,36.0),  (1818.0,157.0), (1726.0,1045.0),  (1724.0,580.0), (1907.0,335.0)]
+  mr_fc_r = [(52.0,1026.0),   (192.0,992.0), (173.0,880.0),   (429.0,622.0),  (186.0,399.0),  (60.0,133.0),   (57.0,21.0),    (289.0,149.0),  (309.0,1012.0),   (253.0,563.0),  (390.0,316.0)]
+
+  pickle_dump(lm_fc_l, OUTPUT_DIR + "lm_fc_l.pkl")
+  pickle_dump(lm_fc_m, OUTPUT_DIR + "lm_fc_m.pkl")
+  pickle_dump(mr_fc_m, OUTPUT_DIR + "mr_fc_m.pkl")
+  pickle_dump(mr_fc_r, OUTPUT_DIR + "mr_fc_r.pkl")
+
 """ main method """
 if __name__ == "__main__":
   # process_backgrounds()
-  # process_frame(3700)
-  preprocess()
+  # process_frame((1*60+6)*24 + 10)
+  # preprocess()
+  # manual_correspondence()
+  fourcc = cv.CV_FOURCC(*'XVID')
+  path = "/home/spyrant/projects/CS4243_project/processed/panorama/test.avi"
+  out = cv2.VideoWriter(path, fourcc, 24.0, (8391, 1080))
+  frame = read_color_image("/home/spyrant/projects/CS4243_project/processed/panorama.jpg")
+  for i in range(100):
+    out.write(frame)
+  out.release()

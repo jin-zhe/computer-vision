@@ -2,21 +2,6 @@ from helpers import *
 
 # code skeleton adapted from http://richardt.name/teaching/supervisions/vision-2011/practical/
 
-""" stitch the images together into a panorama """
-def stitch_images(img_l, img_m, img_r, l2m_hgy, r2m_hgy, size):
-  h_m, w_m = img_m.shape[:2]
-  print size
-  x_offset = abs(l2m_hgy[0:2,2][0])  # x offset due to left image
-  
-  # update the homographies with x-translations so left image flushes against the left
-  panorama = cv2.warpPerspective(img_l, l2m_hgy, size)
-  cv2.warpPerspective(img_r, r2m_hgy, size, panorama, borderMode=cv2.BORDER_TRANSPARENT)
-  # fill the panorama view with middle image
-  for row in range(h_m):
-    for col in range(w_m):
-      panorama[row][col] = img_m[row][col]
-  return panorama
-
 """ Connects corresponding features in the two images """
 def draw_correspondences(img_l, img_m, img_r, lm_fc_l, lm_fc_m, mr_fc_m, mr_fc_r):
   # juxtapose all 3 images
@@ -76,17 +61,22 @@ def get_panorama(img_l, img_m, img_r):
   r2m_hgy, _ = cv2.findHomography(np.array(mr_fc_r), np.array(mr_fc_m))  # dec: right, dest: mid
 
   # calculate size and offset of merged panorama.
-  size = calculate_size(img_m.shape, img_r.shape, l2m_hgy, r2m_hgy)
+  size, x_offset = calculate_size(img_l.shape, img_m.shape, img_r.shape, l2m_hgy, r2m_hgy)
   print "output size: %ix%i" % size
   
+  # update the homographies with x-translations so left image flushes against the left
+  translation_mat = np.mat([[1,0,x_offset],[0,1,0],[0,0,1]]) # translation matrix due to left offset
+  l2m_hgy = translation_mat * l2m_hgy
+  r2m_hgy = translation_mat * r2m_hgy
+
   # finally combine images into a panorama
-  return stitch_images(img_l, img_m, img_r, l2m_hgy, r2m_hgy, size)
+  return stitch_images(img_l, img_m, img_r, l2m_hgy, r2m_hgy, size, x_offset)
 
 """ main method """
 if __name__ == "__main__":
   # load images
-  image_left = read_color_image("images/left2.jpg")
-  image_mid = read_color_image("images/mid2.jpg")
-  image_right = read_color_image("images/right2.jpg")
+  image_left = read_color_image("images/football_left_1584.jpg")
+  image_mid = read_color_image("images/football_mid_1584.jpg")
+  image_right = read_color_image("images/football_right_1584.jpg")
   panorama = get_panorama(image_left, image_mid, image_right)
   write_image("images/panorama.jpg", panorama)

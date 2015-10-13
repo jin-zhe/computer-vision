@@ -35,15 +35,15 @@ def get_features(image, sift):
 """ find the corresponding features coordinates bewteen the two given images and add them to the given correspondence lists """
 def add_feature_correspondences(keypoints_1, descriptors_1, keypoints_2, descriptors_2, correspondence_1, correspondence_2):
 
-  index_pairs = match_descriptors(descriptors_1, descriptors_2) # index pairs of matching descriptors
+  index_pairs = flann_matcher(descriptors_1, descriptors_2) # index pairs of matching descriptors
   for index_1, index_2 in index_pairs:
     correspondence_1.append(keypoints_1[index_1].pt)
     correspondence_2.append(keypoints_2[index_2].pt)
 
 """ returns a list of top k matched descriptor index pairs """
-def match_descriptors(desc1, desc2, r_threshold = 0.06):
+def flann_matcher(desc1, desc2, r_threshold = 0.20):
   'Finds strong corresponding features in the two given vectors.'
-  ## Adapted from <http://stackoverflow.com/a/8311498/72470>.
+  ## Adapted from http://stackoverflow.com/a/8311498/72470
 
   ## Build a kd-tree from the second feature vector.
   FLANN_INDEX_KDTREE = 1  # bug: flann enums are missing
@@ -55,7 +55,7 @@ def match_descriptors(desc1, desc2, r_threshold = 0.06):
   ## Create a mask that indicates if the first-found item is sufficiently
   ## closer than the second-found, to check if the match is robust.
   mask = dist[:,0] / dist[:,1] < r_threshold
-  
+
   ## Only return robust feature pairs.
   idx1  = np.arange(len(desc1))
   pairs = np.int32(zip(idx1, idx2[:,0]))
@@ -63,14 +63,88 @@ def match_descriptors(desc1, desc2, r_threshold = 0.06):
   # pairs = [list(pair) for pair in zipped_pairs]
   # pairs.sort(key=lambda x: abs(dist[x[0]][0] - dist[x[1]][1]))  # sort by closest distances
 
-""" determine size and offset of stitched panorama """
-def calculate_size(size_m, size_r, l2m_hgy, r2m_hgy):
+def bf_matcher(desc1, desc2, k = 2):
+  bf = cv2.BFMatcher(cv2.NORM_L2)
+  matches = bf.knnMatch(desc1, desc2, k)
+  # Apply ratio test
+  good = []
+  for m,n in matches:
+    if m.distance < 0.75*n.distance:
+      good.append((m.queryIdx, m.trainIdx))
+  return good
+
+""" determine size and x offset of stitched panorama """
+def calculate_size(size_l, size_m, size_r, l2m_hgy, r2m_hgy, offset_manual=0):
+  h_l, w_l = size_m[:2]
   h_m, w_m = size_m[:2]
   h_r, w_r = size_r[:2]
-  width = w_m  + 4000
+
+  # determine panoramic width attributed by left frame
+  l_tlc = getMapping((0,0), l2m_hgy)          # top left corner in left frame
+  l_blc = getMapping((0,h_l-1), l2m_hgy)      # bottom left corner in left frame
+  mapped_w_l = -max(l_tlc[0], l_blc[0])       # the width due to left frame after mapping
+  
+  # determine panoramic width attributed by right frame
+  r_trc = getMapping((w_r-1,0), r2m_hgy)      # top left corner in left frame
+  r_brc = getMapping((w_r-1,h_r-1), r2m_hgy)  # bottom left corner in left frame
+  mapped_w_r = min(r_trc[0], r_brc[0]) - w_m  # the width due to right frame after mapping 
+  
+  width = mapped_w_l + w_m + mapped_w_r + offset_manual
   height = h_m
   
-  return (width, height)
+  return (width, height), mapped_w_l + offset_manual
+
+""" stitch the images together into a panorama """
+def stitch_images(img_l, img_m, img_r, l2m_hgy, r2m_hgy, size, x_offset):
+  h_m, w_m = img_m.shape[:2]
+  panorama = cv2.warpPerspective(img_l, l2m_hgy, size)  # fill left frame
+  cv2.warpPerspective(img_r, r2m_hgy, size, panorama, borderMode=cv2.BORDER_TRANSPARENT)  # fill right frame
+  panorama[:,x_offset:x_offset+w_m] = img_m   # fill the panorama view with middle frame
+  return panorama
+
+""" returns the mapped coordinates given a point and the homography matrix """
+def getMapping(xy, hg):
+  vect = np.matrix([[xy[0]],[xy[1]],[1]])  # vector in homogenous coordinates
+  mapping = np.array(hg * vect)
+  mapping /= mapping[2][0]  # divide by w
+  return mapping.astype(int).flatten()[:2]
+
+""" return the average HSV given the image """
+def get_average_HSV(image):
+  image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV) # convert image to hsv colorspace
+  avgH = image[0][0][0]
+  avgS = image[0][0][1]
+  avgV = image[0][0][2]
+  count = 1.0
+  for i in range(image.shape[0]):
+    for j in range(image.shape[1]):
+      hsv = image[i][j]
+      avgH = count/(count+1) * avgH + hsv[0]/(count+1)
+      avgS = count/(count+1) * avgS + hsv[1]/(count+1)
+      avgV = count/(count+1) * avgV + hsv[2]/(count+1)
+      count += 1
+  return avgH, avgS, avgV
+
+""" return the average HSV given the image """
+def get_average_BGR(image):
+  avgB = image[0][0][0]
+  avgG = image[0][0][1]
+  avgR = image[0][0][2]
+  count = 1.0
+  for i in range(image.shape[0]):
+    for j in range(image.shape[1]):
+      bgr = image[i][j]
+      avgB = count/(count+1) * avgB + bgr[0]/(count+1)
+      avgG = count/(count+1) * avgG + bgr[1]/(count+1)
+      avgR = count/(count+1) * avgR + bgr[2]/(count+1)
+      count += 1
+  return avgB, avgG, avgR
+
+""" scale an image with the given HSV scaling mask """
+def scale_HSV(image, scale_mask):
+  cv2.cvtColor(image, cv2.COLOR_BGR2HSV, image) # convert image to hsv colorspace
+  image *= scale_mask
+  cv2.cvtColor(image, cv2.COLOR_HSV2BGR, image) # convert back to bgr colorspace
 
 """ dump a pickle file to the given path """
 def pickle_dump(obj, path):
