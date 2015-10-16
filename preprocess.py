@@ -107,9 +107,9 @@ if __name__ == "__main__":
   # preprocess()
   # manual_correspondence()
   fourcc = cv.CV_FOURCC(*'XVID')
-  path = "/home/spyrant/projects/CS4243_project/processed/panorama/test.avi"
+  path = "./processed/panorama/test.avi"
   out = cv2.VideoWriter(path, fourcc, 24.0, (8391, 1080))
-  frame = read_color_image("/home/spyrant/projects/CS4243_project/processed/panorama.jpg")
+  frame = read_color_image("./processed/panorama.jpg")
   for i in range(100):
     out.write(frame)
   out.release()
