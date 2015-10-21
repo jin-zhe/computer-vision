@@ -4,6 +4,9 @@ from helpers import *
 INPUT_DIR = './videos/raw/'
 OUTPUT_DIR = './processed/correspondences/'
 
+SCALE = 0.442 # resizing scale
+SIZE = (int(8391*SCALE), int(1080*SCALE)) # size of output
+
 """ extracts the specific frame from video and writes it to disk """
 def process_frame(frame_number=0):
   for video in os.listdir(INPUT_DIR):
@@ -105,11 +108,12 @@ if __name__ == "__main__":
   # process_backgrounds()
   # process_frame((1*60+6)*24 + 10)
   # preprocess()
-  # manual_correspondence()
-  fourcc = cv.CV_FOURCC(*'XVID')
+  # manual_correspondence()zz
+  fourcc = cv.CV_FOURCC(*'MPEG')
   path = "./processed/panorama/test.avi"
-  out = cv2.VideoWriter(path, fourcc, 24.0, (8391, 1080))
-  frame = read_color_image("./processed/panorama.jpg")
+  out = cv2.VideoWriter(path, fourcc, 24.0, SIZE)
+  frame = read_color_image("./processed/panorama/panorama.jpg")
+  res = cv2.resize(frame,None,fx=SCALE, fy=SCALE, interpolation = cv2.INTER_CUBIC)
   for i in range(100):
-    out.write(frame)
+    out.write(res)
   out.release()
