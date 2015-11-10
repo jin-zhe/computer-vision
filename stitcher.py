@@ -1,13 +1,13 @@
 from helpers import *
-import time
 
-INPUT_DIR = './videos/raw/'
-OUTPUT_DIR = "./processed/panorama/"
+INPUT_DIR = './raw/'
+OUTPUT_DIR = "./processed/videos/"
 
 # predetermined values
 SCALE = 0.442                                   # resizing scale
 PANORAMA_SIZE = (8391, 1080)                    # size of raw panorama
-TOPDOWN_SIZE = (2280, 855)                      # size of top-down view
+PADDING = 40
+TOPDOWN_SIZE = (1332 + PADDING*2, 855 + PADDING*2)  # size of top-down view
 VIDEO_SIZE = (int(8391*SCALE), int(1080*SCALE)) # size of output
 X_OFFSET = 2815
 
@@ -45,8 +45,8 @@ def write_panoramic_video(panorama_path, topdown_path, cap_l, cap_m, cap_r, l2m_
     topdown_out.write(topdown_frame)
 
     # write panorama video
-    res = cv2.resize(panorama_frame,None,fx=SCALE, fy=SCALE, interpolation = cv2.INTER_CUBIC) # resize 
-    panorama_out.write(res)
+    # res = cv2.resize(panorama_frame,None,fx=SCALE, fy=SCALE, interpolation = cv2.INTER_CUBIC) # resize 
+    # panorama_out.write(res)
 
   topdown_out.release()
   panorama_out.release()
@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
   # predetermined correspondences for panorama to top-down view
   p_fc = [(2699.0,247.0), (4998.0,226.0), (8332.0,1000.0), (33.0,1023.0)]
-  td_fc = [(0.0,0.0), (TOPDOWN_SIZE[0]-1,0.0), (TOPDOWN_SIZE[0]-1,TOPDOWN_SIZE[1]-1), (0.0,TOPDOWN_SIZE[1]-1)]
+  td_fc = [(float(PADDING),PADDING), (TOPDOWN_SIZE[0]-1-PADDING,PADDING), (TOPDOWN_SIZE[0]-1-PADDING,TOPDOWN_SIZE[1]-1-PADDING), (PADDING,TOPDOWN_SIZE[1]-1-PADDING)]
 
   # compute homography between the frames
   # l2m_hgy, _ = cv2.findHomography(lm_fc_l, lm_fc_m, cv2.RANSAC, 5.0)  # src: left, dest: mid
@@ -90,8 +90,8 @@ if __name__ == "__main__":
   
   # write outputs  panorama:7972.33421612s, topdown: 7853.82409286s
   start_time = time.time()
-  panoramic_output_path = OUTPUT_DIR + 'panorama.avi'
-  topdown_output_path = OUTPUT_DIR + 'topdown.avi'
+  panoramic_output_path = OUTPUT_DIR + 'panorama/panorama.avi'
+  topdown_output_path = OUTPUT_DIR + 'topdown/topdown.avi'
   write_panoramic_video(panoramic_output_path, topdown_output_path, cap_l, cap_m, cap_r, l2m_hgy, r2m_hgy, p2t_hgy, frame_count)
   print "Execution time(s): " + str(time.time() - start_time)
   

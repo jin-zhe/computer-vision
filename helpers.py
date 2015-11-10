@@ -1,6 +1,8 @@
+from matplotlib import pyplot as plt
 import cv2.cv as cv
 import numpy as np
 import cPickle
+import time
 import math
 import cv2
 import os
@@ -12,6 +14,14 @@ def read_color_image(path):
 """ read in image from input path into memory as a grayscale image """
 def read_grayscale_image(path):
   return cv2.imread(path, cv2.CV_LOAD_IMAGE_GRAYSCALE)
+
+""" returns the grayscale image from a color image """
+def get_grayscale(color_image):
+  return cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
+
+""" convert image to hsv colorspace """
+def get_HSV(BGR_image):
+  return cv2.cvtColor(BGR_image, cv2.COLOR_BGR2HSV) 
 
 """ read in video capture """
 def read_video(path):
@@ -26,6 +36,10 @@ def show_image(image):
   cv2.imshow('image',image)
   cv2.waitKey(0)
   cv2.destroyAllWindows()
+
+""" subtract image 1 from image 2 """
+def image_subtraction(image_1, image_2):
+  return cv2.convertScaleAbs(np.subtract(np.float32(image_1), np.float32(image_2)))
 
 """ given image, return keypoints, descriptors using SURF """
 def get_features(image, sift):
@@ -145,6 +159,19 @@ def scale_HSV(image, scale_mask):
   cv2.cvtColor(image, cv2.COLOR_BGR2HSV, image) # convert image to hsv colorspace
   image *= scale_mask
   cv2.cvtColor(image, cv2.COLOR_HSV2BGR, image) # convert back to bgr colorspace
+
+""" extract background of a video """
+def extract_background(video_path, output_path):
+  cap = read_video(video_path)
+  frame_count = int(cap.get(cv.CV_CAP_PROP_FRAME_COUNT))
+  avg_img = np.float32(cap.read()[1])                         # initialize using first frame
+  for count in range(1, frame_count):                         # iterate through all frames
+    _, img = cap.read()                                       # read frame as img
+    factor = 1.0/(count + 1)                                  # incremental average factor
+    avg_img = np.add(count * factor * avg_img, factor * img)  # update average
+  cap.release()
+  background = cv2.convertScaleAbs(avg_img) # convert into uint8 image
+  write_image(output_path, background)
 
 """ dump a pickle file to the given path """
 def pickle_dump(obj, path):
