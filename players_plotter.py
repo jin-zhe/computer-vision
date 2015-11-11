@@ -1,5 +1,6 @@
 from helpers import *
 
+MINIMAP_PATH = "./processed/images/field_color.png"
 PLAYERS_PATH = "./processed/players/players.pkl"
 
 SKIP = 1
@@ -39,6 +40,14 @@ if __name__ == "__main__":
 				
 			else:
 				distance += calculate_distance(oldPos, pos)
+				
+		x,y = zip(*positions)
+		plt.figure()
+		plt.title(p)
+		plt.imshow(minimap)
+		plt.hold(True)
+		plt.scatter(x, y, marker='s', color='red', alpha=0.5)
+		plt.show()
 				
 		print p, distance/1000, "km"
 		# TODO show pyplot and distance
