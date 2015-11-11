@@ -4,6 +4,8 @@ MINIMAP_PATH = "./processed/images/field_color.png"
 PLAYERS_PATH = "./processed/players/players.pkl"
 OUTPUT_PATH = "./processed/"
 
+def mark_offside(frame, position, color):
+  cv2.line(frame, (position, 0), (position, int(height)), color)
 
 def mark_player(frame, position, tag, color):
   cv2.circle(frame, position, 12, (0,255,255), -1) # yellow outline
@@ -18,6 +20,8 @@ if __name__ == "__main__":
   # for each frame
   for i in range(7200):
     frame = np.copy(minimap)
+    blue_offside = int(width)
+    red_offside = 0
     # for each player
     for p in players:
       player = players[p]
@@ -43,6 +47,8 @@ if __name__ == "__main__":
         # if player
         else:
             player_colour = (0,0,255)
+            if position[0] > red_offside:
+                red_offside = position[0]
 
       # if blue team
       else:
@@ -52,6 +58,10 @@ if __name__ == "__main__":
         # if player
         else:
             player_colour = (255,0,0)
+            if position[0] < blue_offside:
+                blue_offside = position[0]
       mark_player(frame, position, p, player_colour)
+    mark_offside(frame, blue_offside, (255,0,0))
+    mark_offside(frame, red_offside, (0,0,255))
     out.write(frame)
   out.release()
