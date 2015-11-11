@@ -4,7 +4,9 @@ OUTPUT_PATH = "./processed/"
 
 """ preprocess player information """
 def preprocess_players(first_frame):
-  win_lin, hist_lin = get_trackable(first_frame, (879,1206),(910,1152), (893,1178),(896,1168))
+  # hardcoded information
+  win_lt, hist_lt = get_trackable(first_frame, (0,706),(35,696), (8,704),(10,700))
+  win_lb, hist_lb = get_trackable(first_frame, (879,1206),(910,1152), (893,1178),(896,1168))
   win_ref, hist_ref = get_trackable(first_frame, (321,998),(412,959), (331,991),(339,990))
   win_rk, hist_rk = get_trackable(first_frame, (352,349),(455,319), (382,320),(391,325))
   win_bk, hist_bk = get_trackable(first_frame, (365,1400),(441,1327), (414,1361),(416,1358))
@@ -28,7 +30,7 @@ def preprocess_players(first_frame):
   win_b10, hist_b10 = get_trackable(first_frame, (480,1215),(558,1152), (518,1185),(509,1193))
 
   players = {
-   "linesman": {"window": win_lin, "histogram": hist_lin, "positions":[]}, "referee": {"window": win_ref, "histogram": hist_ref, "positions":[]}, "red_keeper": {"window": win_rk, "histogram": hist_rk, "positions":[]}, "blue_keeper": {"window": win_bk, "histogram": hist_bk, "positions":[]},
+   "linesman_top": {"window": win_lt, "histogram": hist_lt, "positions":[]}, "linesman_bottom": {"window": win_lb, "histogram": hist_lb, "positions":[]}, "referee": {"window": win_ref, "histogram": hist_ref, "positions":[]}, "red_keeper": {"window": win_rk, "histogram": hist_rk, "positions":[]}, "blue_keeper": {"window": win_bk, "histogram": hist_bk, "positions":[]},
    "red_1": {"window": win_r1, "histogram": hist_r1, "positions":[]}, "red_2": {"window": win_r2, "histogram": hist_r2, "positions":[]}, "red_3": {"window": win_r3, "histogram": hist_r3, "positions":[]}, "red_4": {"window": win_r4, "histogram": hist_r4, "positions":[]}, "red_5": {"window": win_r5, "histogram": hist_r5, "positions":[]}, "red_6": {"window": win_r6, "histogram": hist_r6, "positions":[]}, "red_7": {"window": win_r7, "histogram": hist_r7, "positions":[]}, "red_8": {"window": win_r8, "histogram": hist_r8, "positions":[]},
    "blue_1": {"window": win_b1, "histogram": hist_b1, "positions":[]},"blue_2": {"window": win_b2, "histogram": hist_b2, "positions":[]},"blue_3": {"window": win_b3, "histogram": hist_b3, "positions":[]},"blue_4": {"window": win_b4, "histogram": hist_b4, "positions":[]},"blue_5": {"window": win_b5, "histogram": hist_b5, "positions":[]},"blue_6": {"window": win_b6, "histogram": hist_b6, "positions":[]},"blue_7": {"window": win_b7, "histogram": hist_b7, "positions":[]},"blue_8": {"window": win_b8, "histogram": hist_b8, "positions":[]},"blue_9": {"window": win_b9, "histogram": hist_b9, "positions":[]},"blue_10": {"window": win_b10, "histogram": hist_b10, "positions":[]}
   }
@@ -58,6 +60,13 @@ def get_trackable(frame, top_right, bottom_left, pt1, pt2):
   track_window = (c,r,w,h)
   return track_window, roi_hist
 
+""" augment frame with shapes """
+def draw_shapes(frame, track_window):
+  position = get_position(track_window)
+  cv2.circle(frame, position, 5, (0,0,255))
+  x,y,w,h = track_window
+  cv2.rectangle(frame, (x,y), (x+w,y+h), 255,1)
+
 """ returns (column,row,width,height) given top right and bottom left corners """
 def get_window(top_right, bottom_left):
   row = top_right[0]
@@ -80,13 +89,21 @@ def main(input_path):
   cap = cv2.VideoCapture(input_path)
   out = cv2.VideoWriter(OUTPUT_PATH + "videos/augmented.avi", cv.CV_FOURCC(*'MPEG'), 24.0, (int(cap.get(cv.CV_CAP_PROP_FRAME_WIDTH)), int(cap.get(cv.CV_CAP_PROP_FRAME_HEIGHT))))
   frame_count = int(cap.get(cv.CV_CAP_PROP_FRAME_COUNT))
-  first_frame = get_HSV(cap.read()[1]) # first frame of the video in HSV
+  first_frame = BGR_to_HSV(cap.read()[1]) # first frame of the video in HSV
   
   players = preprocess_players(first_frame) # player information
 
+  # process first frame using hardcoded windows
+  first_frame = HSV_to_BGR(first_frame)
+  for _, player in players.items():
+    track_window = player["window"]
+    player["positions"].append(get_position(track_window))
+    draw_shapes(first_frame, track_window)
+  out.write(first_frame)
+
+  # process remaining frames using mean shift
   # Setup the termination criteria, either 10 iteration or move by at least 1 px
   term_crit = ( cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1 )
-
   for i in range(frame_count-1):
     ret,frame = cap.read()
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -105,9 +122,7 @@ def main(input_path):
       player["positions"].append(position)
       
       # draw shapes on frame
-      cv2.circle(frame, position, 5, (0,0,255))
-      x,y,w,h = track_window
-      cv2.rectangle(frame, (x,y), (x+w,y+h), 255,1)
+      draw_shapes(frame, track_window)
     
     out.write(frame)
 

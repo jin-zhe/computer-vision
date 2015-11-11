@@ -19,9 +19,13 @@ def read_grayscale_image(path):
 def get_grayscale(color_image):
   return cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
 
-""" convert image to hsv colorspace """
-def get_HSV(BGR_image):
-  return cv2.cvtColor(BGR_image, cv2.COLOR_BGR2HSV) 
+""" convert bgr image to hsv colorspace """
+def BGR_to_HSV(BGR_image):
+  return cv2.cvtColor(BGR_image, cv2.COLOR_BGR2HSV)
+
+""" convert hsv image to bgr colorspace """
+def HSV_to_BGR(HSV_image):
+  return cv2.cvtColor(HSV_image, cv2.COLOR_HSV2BGR)
 
 """ read in video capture """
 def read_video(path):
