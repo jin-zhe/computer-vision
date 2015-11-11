@@ -45,6 +45,7 @@ if __name__ == "__main__":
 		plt.figure()
 		plt.title(p)
 		plt.imshow(minimap)
+		plt.axis('off')
 		plt.hold(True)
 		plt.scatter(x, y, marker='s', color='red', alpha=0.5)
 		plt.show()
