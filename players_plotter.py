@@ -5,8 +5,8 @@ PLAYERS_PATH = "./processed/players/players.pkl"
 
 SKIP = 1
 SKIP_LENGTH = 24
-FIELD_WIDTH=73
-FIELD_HEIGHT=110
+FIELD_WIDTH=100
+FIELD_HEIGHT=64
 PIXEL_ADJUSTMENT = 10
 minimap = read_color_image(MINIMAP_PATH)
 height, width, dim = minimap.shape
