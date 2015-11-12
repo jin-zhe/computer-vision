@@ -2,55 +2,41 @@ from helpers import *
 
 MINIMAP_PATH = "./processed/images/field_color.png"
 PLAYERS_PATH = "./processed/players/players.pkl"
+OUTPUT_PATH = "./processed/images/plots/"
 
-SKIP = 1
-SKIP_LENGTH = 24
-FIELD_WIDTH=100
-FIELD_HEIGHT=64
+SKIP_LENGTH = 24	# number of frames to skip for reading of positions
+PIXEL_TO_M = 120./1330.
 PIXEL_ADJUSTMENT = 10
-minimap = read_color_image(MINIMAP_PATH)
-height, width, dim = minimap.shape
 
-def calculate_distance(oldPos, newPos):
-  dist = math.hypot((oldPos[0] - newPos[0])/width*FIELD_WIDTH/PIXEL_ADJUSTMENT, (oldPos[1] - newPos[1])/height*FIELD_HEIGHT/PIXEL_ADJUSTMENT)
-  return dist
+""" returns the euclidean distance between 2 points """
+def get_distance(pt1, pt2):
+  return math.hypot(pt1[0] - pt2[0], pt1[1] - pt2[1])
 
 if __name__ == "__main__":
 	players = pickle_load(PLAYERS_PATH)
-
-	# TODO declare pyplots for all players on the field, i.e. each player have their own pyplot
-
+	minimap = read_color_image(MINIMAP_PATH)
 	# plot for each player
 	for p in players:
 		player = players[p]
 		positions = player["positions"]
-		distance = 0
-		oldPos = (0, 0)
-		current_skip = 0
-		# TODO: plot using player positions
-		for pos in positions:
-			if SKIP:
-				if current_skip != SKIP_LENGTH:
-					current_skip = current_skip + 1
-					continue
-				else:
-					current_skip = 0
-					
-			if oldPos == (0, 0):
-				oldPos = pos
-				
-			else:
-				distance += calculate_distance(oldPos, pos)
-				
-		x,y = zip(*positions)
-		plt.figure()
-		title = p, distance/1000, "km"
-		plt.title(title)
+		
+		# accumulate player distance
+		total_distance = 0
+		old_pos = positions[0]
+		for pos in positions[::SKIP_LENGTH]:
+			curr_pos = pos
+			total_distance += get_distance(old_pos, pos)
+			old_pos = curr_pos
+		
+		total_distance *= PIXEL_TO_M # scale total distance to metric units
+
+		# get plot and writes to disk
+		x,y = zip(*positions[::SKIP_LENGTH])
+		title = "Player " + p + "\nTotal distance ran: " + "%.2f" % total_distance + " m"
+		plt.clf()
+		plt.title(title, fontsize=18, fontweight='bold')
 		plt.imshow(minimap)
 		plt.axis('off')
-		plt.hold(True)
-		plt.scatter(x, y, marker='s', color='red', alpha=0.5)
-		plt.show()
-				
-		print p, distance/1000, "km"
-		# TODO show pyplot and distance
+		plt.plot(x, y, marker='s', color='red', alpha=0.5)
+		plt.savefig(OUTPUT_PATH + p + ".png")
+		print p, "%.2f" % total_distance, "m"
