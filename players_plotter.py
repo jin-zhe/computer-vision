@@ -7,11 +7,12 @@ SKIP = 1
 SKIP_LENGTH = 24
 FIELD_WIDTH=73
 FIELD_HEIGHT=110
+PIXEL_ADJUSTMENT = 10
 minimap = read_color_image(MINIMAP_PATH)
 height, width, dim = minimap.shape
 
 def calculate_distance(oldPos, newPos):
-  dist = math.hypot((oldPos[0] - newPos[0])/width*FIELD_WIDTH, (oldPos[1] - newPos[1])/height*FIELD_HEIGHT)
+  dist = math.hypot((oldPos[0] - newPos[0])/width*FIELD_WIDTH/PIXEL_ADJUSTMENT, (oldPos[1] - newPos[1])/height*FIELD_HEIGHT/PIXEL_ADJUSTMENT)
   return dist
 
 if __name__ == "__main__":
@@ -43,7 +44,8 @@ if __name__ == "__main__":
 				
 		x,y = zip(*positions)
 		plt.figure()
-		plt.title(p)
+		title = p, distance/1000, "km"
+		plt.title(title)
 		plt.imshow(minimap)
 		plt.axis('off')
 		plt.hold(True)
