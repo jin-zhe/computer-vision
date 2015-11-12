@@ -21,7 +21,9 @@ if __name__ == "__main__":
   for i in range(7200):
     frame = np.copy(minimap)
     blue_offside = int(width)
+    blue_offside_check = int(width)
     red_offside = 0
+    red_offside_check = 0
     # for each player
     for p in players:
       player = players[p]
@@ -49,6 +51,8 @@ if __name__ == "__main__":
             player_colour = (0,0,255)
             if position[0] > red_offside:
                 red_offside = position[0]
+            if position[0] < blue_offside_check:
+                blue_offside_check = position[0]
 
       # if blue team
       else:
@@ -60,8 +64,16 @@ if __name__ == "__main__":
             player_colour = (255,0,0)
             if position[0] < blue_offside:
                 blue_offside = position[0]
+            if position[0] > red_offside_check:
+                red_offside_check = position[0]
       mark_player(frame, position, p, player_colour)
-    mark_offside(frame, blue_offside, (255,0,0))
-    mark_offside(frame, red_offside, (0,0,255))
+    if blue_offside > blue_offside_check:  
+        mark_offside(frame, blue_offside, (255,0,0))
+    else:
+        mark_offside(frame, blue_offside, (0,0,0))
+    if red_offside < red_offside_check:  
+        mark_offside(frame, red_offside, (0,0,255))
+    else:
+        mark_offside(frame, red_offside, (0,0,0))
     out.write(frame)
   out.release()
