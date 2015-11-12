@@ -19,21 +19,19 @@ if __name__ == "__main__":
   # for each frame
 
   #superimpose on topdown video
-  incomingVideoFeed = cv2.VideoCapture("topdown.avi")
+  incomingVideoFeed = cv2.VideoCapture("./processed/videos/topdown/topdown.avi")
 
   frameWidth = int(incomingVideoFeed.get(cv.CV_CAP_PROP_FRAME_WIDTH))
   frameHeight = int(incomingVideoFeed.get(cv.CV_CAP_PROP_FRAME_HEIGHT))
   fps = int(incomingVideoFeed.get(cv.CV_CAP_PROP_FPS))
   frameCount = int(incomingVideoFeed.get(cv.CV_CAP_PROP_FRAME_COUNT))
 
-
   out = cv2.VideoWriter(OUTPUT_PATH + "videos/offside.avi", cv.CV_FOURCC(*'MPEG'), 24.0, (int(frameWidth), int(frameHeight)))
-
 
   for currentFrameIndex in xrange(frameCount):
     _, frame = incomingVideoFeed.read()
-    blue_offside = int(width)
-    blue_offside_check = int(width)
+    blue_offside = int(frameWidth)
+    blue_offside_check = int(frameWidth)
     red_offside = 0
     red_offside_check = 0
     # for each player
