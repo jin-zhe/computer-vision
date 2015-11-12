@@ -1,7 +1,5 @@
 from helpers import *
 
-# code skeleton adapted from http://richardt.name/teaching/supervisions/vision-2011/practical/
-
 """ Connects corresponding features in the two images """
 def draw_correspondences(img_l, img_m, img_r, lm_fc_l, lm_fc_m, mr_fc_m, mr_fc_r):
   # juxtapose all 3 images
@@ -75,8 +73,8 @@ def get_panorama(img_l, img_m, img_r):
 """ main method """
 if __name__ == "__main__":
   # load images
-  image_left = read_color_image("images/football_left_1584.jpg")
-  image_mid = read_color_image("images/football_mid_1584.jpg")
-  image_right = read_color_image("images/football_right_1584.jpg")
-  panorama = get_panorama(image_left, image_mid, image_right)
-  write_image("images/panorama.jpg", panorama)
+  img_l = read_color_image("processed/images/backgrounds/frames/football_left_background.jpg")
+  img_m = read_color_image("processed/images/backgrounds/frames/football_mid_background.jpg")
+  img_r = read_color_image("processed/images/backgrounds/frames/football_right_background.jpg")
+  panorama = get_panorama(img_l, img_m, img_r)
+  write_image("processed/images/panorama.jpg", panorama)
