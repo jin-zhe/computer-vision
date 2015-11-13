@@ -1,8 +1,8 @@
 from helpers import *
 # extract_background("processed/panorama/topdown.avi", "images/topdown_bg.png")
-BACKGROUND = read_color_image("images/topdown_bg.png")
+BACKGROUND = read_color_image("processed/images/backgrounds/topdown_bg.png")
 def read_first_frame():
-  cap = read_video("processed/panorama/topdown.avi")
+  cap = read_video("processed/videos/panorama/topdown.avi")
   _, img = cap.read()
   cap.release()
   return img
@@ -23,4 +23,4 @@ img = cv2.medianBlur(img,5)
 # sift = cv2.SIFT()
 # kp, des = sift.detectAndCompute(median,None)
 # img = cv2.drawKeypoints(median,kp,None,(0,0,255),2)
-write_image("images/out.png", img)
+write_image("./images/threshold_results/out.png", img)

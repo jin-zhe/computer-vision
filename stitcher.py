@@ -45,8 +45,8 @@ def write_panoramic_video(panorama_path, topdown_path, cap_l, cap_m, cap_r, l2m_
     topdown_out.write(topdown_frame)
 
     # write panorama video
-    # res = cv2.resize(panorama_frame,None,fx=SCALE, fy=SCALE, interpolation = cv2.INTER_CUBIC) # resize 
-    # panorama_out.write(res)
+    res = cv2.resize(panorama_frame,None,fx=SCALE, fy=SCALE, interpolation = cv2.INTER_CUBIC) # resize 
+    panorama_out.write(res)
 
   topdown_out.release()
   panorama_out.release()
